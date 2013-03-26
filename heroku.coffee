@@ -2,7 +2,7 @@
 #   A simple interaction with Heroku command line
 #
 # Dependencies:
-#   "heroku": "https://github.com/vongrippen/node-heroku.git"
+#   "heroku": "git://github.com/vongrippen/node-heroku.git"
 #
 # Notes:
 #   Dependency should change once pull request is accepted and released to npm
