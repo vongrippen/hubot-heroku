@@ -94,16 +94,16 @@ module.exports = (robot)->
 
   robot.respond /heroku (.*) ps:restart$/i, (msg)->
     heroku.post_ps_restart msg.match[1], (error, result)->
-      heroku Ps msg
+      herokuPs msg
 
   robot.respond /heroku (.*) ps:restart (.*)/i, (msg)->
     heroku.post_ps_restart msg.match[1], {ps: msg.match[2]}, (error, result)->
-      heroku Ps msg
+      herokuPs msg
 
   robot.respond /heroku (.*) ps:scale (.*)=(.*)/i, (msg)->
     heroku.post_ps_scale msg.match[1], msg.match[2], msg.match[3], (error, result)->
-      heroku Ps msg
+      herokuPs msg
 
   robot.respond /heroku (.*) ps:stop (.*)/i, (msg)->
     heroku.post_ps_stop msg.match[1], {ps: msg.match[2]}, (error, result)->
-      heroku Ps msg
+      herokuPs msg
