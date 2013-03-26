@@ -15,6 +15,7 @@
 #   hubot heroku <app> config:set <variable>=<value> - Set a config var for an app
 #   hubot heroku <app> config:unset <variable> - Delete a config var for an app
 #   hubot heroku <app> ps - List running Heroku processes for an app
+#   hubot heroku <app> ps:restart [process] - Restart Heroku process or all processes
 heroku = new (require("heroku")).Heroku({key: process.env.HUBOT_HEROKU_API_KEY})
 
 nodelog = (error, result)->
@@ -86,3 +87,11 @@ module.exports = (robot)->
           output.push p
         output.push ''
       msg.send output.join "\n"
+
+  robot.respond /heroku (.*) ps:restart$/i, (msg)->
+    heroku.post_ps_restart msg.match[1], (error, result)->
+      msg.send result
+
+  robot.respond /heroku (.*) ps:restart (.*)/i, (msg)->
+    heroku.post_ps_restart msg.match[1], {ps: msg.match[2]}, (error, result)->
+      msg.send result
