@@ -18,6 +18,10 @@
 #   hubot heroku <app> ps:restart [process] - Restart Heroku process or all processes
 #   hubot heroku <app> ps:scale <process>=<count> - Scale Heroku processes
 #   hubot heroku <app> ps:stop <process> - Stop Heroku process (restarts on a new dyno)
+#   hubot heroku <app> sharing - List collaborators for an app
+#   hubot heroku <app> sharing:add - Add a collaborator to an app
+#   hubot heroku <app> sharing:remove - Remove a collaborator from an app
+#   hubot heroku <app> sharing:transfer - Transfer an app to another user (WARNING: Can only be undone by new owner!)
 heroku = new (require("heroku")).Heroku({key: process.env.HUBOT_HEROKU_API_KEY})
 
 nodelog = (error, result)->
@@ -29,6 +33,28 @@ nodelog = (error, result)->
   console.log result
 
 module.exports = (robot)->
+
+  ###
+  #
+  # heroku sharing
+  #
+  ###
+  robot.respond /heroku (.*) sharing:add (.*)/i, (msg)->
+    heroku.post_collaborator msg.match[1], msg.match[2], (error, result)->
+      msg.send result
+  robot.respond /heroku (.*) sharing:remove (.*)/i, (msg)->
+    heroku.delete_collaborator msg.match[1], msg.match[2], (error, result)->
+      msg.send result
+  robot.respond /heroku (.*) sharing:transfer (.*)/i, (msg)->
+    heroku.put_app msg.match[1], {transfer_owner: msg.match[2]}, (error, result)->
+      if result
+        msg.send "#{match[1]} transferred to #{match[2]}"
+  robot.respond /heroku (.*) sharing$/i, (msg)->
+    heroku.get_collaborators msg.match[1], (error, result)->
+      output = ["=== #{msg.match[1]} Collaborators"]
+      for collab in result
+        output.push collab.email
+      msg.send output.join("\n")
 
 
   ###
