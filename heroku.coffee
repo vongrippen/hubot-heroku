@@ -2,10 +2,10 @@
 #   A simple interaction with Heroku command line
 #
 # Dependencies:
-#   "heroku": "https://github.com/vongrippen/node-heroku.git"
+#   "heroku": ">0.0.7"
 #
 # Notes:
-#   Dependency should change once pull request is accepted and released to npm
+#   Because of access to sensitive areas of the Heroku API, it is highly recommended that you secure your Hubot instance.
 #
 # Configuration:
 #   HUBOT_HEROKU_API_KEY
