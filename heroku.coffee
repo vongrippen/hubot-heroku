@@ -18,6 +18,10 @@
 #   hubot heroku <app> ps:restart [process] - Restart Heroku process or all processes
 #   hubot heroku <app> ps:scale <process>=<count> - Scale Heroku processes
 #   hubot heroku <app> ps:stop <process> - Stop Heroku process (restarts on a new dyno)
+#   hubot heroku <app> releases - List deployed releases for an app
+#   hubot heroku <app> releases:info - List full information for an app release
+#   hubot heroku <app> releases:rollback v<##> - Rollback app to specified version
+#   hubot heroku <app> rollback - Rollback to the previous Heroku app version
 #   hubot heroku <app> sharing - List collaborators for an app
 #   hubot heroku <app> sharing:add - Add a collaborator to an app
 #   hubot heroku <app> sharing:remove - Remove a collaborator from an app
@@ -32,7 +36,92 @@ nodelog = (error, result)->
   console.log "Result:"
   console.log result
 
+#pads right
+String::rpad = (padString, length) ->
+  str = this
+  str = str + padString  while str.length < length
+  str
+
 module.exports = (robot)->
+
+  ###
+  #
+  # heroku releases
+  #
+  ###
+  robot.respond /heroku (.*) releases$/i, (msg)->
+    heroku.get_releases msg.match[1] , (error, result)->
+      if result
+        output = ["=== #{msg.match[1]} Releases"]
+        releases = []
+        longest =
+          name: 0
+          descr: 0
+          user: 0
+        for release in result.reverse()
+          if release.name.length > longest.name
+            longest.name = release.name.length
+          if release.descr.length > longest.descr
+            longest.descr = release.descr.length
+          if release.user.length > longest.user
+            longest.user = release.user.length
+          releases.push
+            name: release.name
+            descr: release.descr
+            user: release.user
+            time: release.created_at
+        for release in releases
+          line = []
+          line.push release.name.toString().rpad(' ', longest.name)
+          line.push release.descr.toString().rpad(' ', longest.descr)
+          line.push release.user.toString().rpad(' ', longest.user)
+          line.push release.time
+          output.push line.join(' ')
+        msg.send output.join("\n")
+  robot.respond /heroku (.*) releases:info (.*)/i, (msg)->
+    heroku.get_release msg.match[1], msg.match[2], (error, result)->
+      if result
+        output = ["=== Release #{msg.match[2]}"]
+        temp = result.addons
+        output.push "Addons: #{temp.shift()}"
+        for addon in temp
+          output.push "#{''.rpad(' ', 8)}#{addon}"
+        output.push ''
+        output.push "By:     #{result.user}"
+        output.push "Change: #{result.descr}"
+        output.push "When:   #{result.created_at}"
+        output.push ''
+        output.push "=== #{msg.match[2]} Config Vars"
+        temp = 0
+        for variable, val of result.env
+          if variable.length > temp
+            temp = variable.length
+        for variable, val of result.env
+          output.push "#{"#{variable}:".rpad(' ', temp + 1)} #{val}"
+        msg.send output.join("\n")
+  robot.respond /heroku (.*) releases:rollback (.*)/i, (msg)->
+    herokuRollback(msg.match[1], msg.match[2], msg)
+  robot.respond /heroku (.*) rollback$/i, (msg)->
+    heroku.get_releases msg.match[1], (error, result)->
+      if result
+        herokuRollback msg.match[1], result.reverse()[1].name, msg
+  herokuRollback = (app, version, msg)->
+    heroku.post_release app, version, (error, result)->
+      if result
+        msg.send "Rolling back #{app}... done, #{version}"
+
+  ###
+  #
+  # heroku addons
+  #
+  ###
+  robot.respond /heroku (.*) addons$/i, (msg)->
+    heroku.get_addons msg.match[1], (error, result)->
+      if result
+        output = ["=== #{msg.match[1]} Configured Add-ons"]
+        for addon in result
+          output.push addon.name
+        msg.send output.join("\n")
 
   ###
   #
